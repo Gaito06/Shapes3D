@@ -1,22 +1,23 @@
 using System;
 using System.Collections.Generic;
-using Shapes3D;
 using System.Globalization;
+using Shapes3D;
 
 namespace FinalAssignment
 {
     public static class Solver
     {
-        public static double Solve(string[] data)
+        // This method processes each line, creating shapes and calculating totals when requested
+        public static decimal Solve(string[] data)
         {
-            var shapes = new List<Shape>();
-            double totalMeasurement = 0.0;
+            var shapes = new List<Shape3D>();
+            decimal totalMeasurement = 0.0m;  // Use decimal for accurate money calculations and to match your output formatting
 
             foreach (var line in data)
             {
                 var parts = line.Split(',');
 
-                // Shape creation based on type
+                // If the first part is the shape, create it
                 if (parts[0] == "cube")
                 {
                     shapes.Add(new Cube(double.Parse(parts[1], CultureInfo.InvariantCulture)));
@@ -50,10 +51,22 @@ namespace FinalAssignment
                 }
                 else if (parts[0] == "area" || parts[0] == "volume")
                 {
-                    double scale = double.Parse(parts[1], CultureInfo.InvariantCulture);
+                    decimal scale = decimal.Parse(parts[1], CultureInfo.InvariantCulture);
                     foreach (var shape in shapes)
                     {
-                        double measurement = (parts[0] == "area") ? shape.SurfaceArea : shape.Volume;
+                        decimal measurement = 0;
+
+                        // Get area or volume based on the instruction
+                        if (parts[0] == "area" && shape is IShapeWithArea shapeWithArea)
+                        {
+                            measurement = (decimal)shapeWithArea.GetArea();
+                        }
+                        else if (parts[0] == "volume" && shape is IShapeWithVolume shapeWithVolume)
+                        {
+                            measurement = (decimal)shapeWithVolume.GetVolume();
+                        }
+
+                        // Apply the scaling factor and add to total
                         totalMeasurement += measurement * scale;
                     }
                 }
