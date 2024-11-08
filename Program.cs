@@ -31,11 +31,9 @@ namespace FinalAssignment
                 return;
             }
 
-            // Call the Solver to calculate the requested total
             decimal total = Solver.CalculateTotal(shapes);
 
-            // Format the output
-            Console.WriteLine($"The sum of measurements is {total.ToString("N2", CultureInfo.InvariantCulture)}.");
+            Console.WriteLine($"The sum of measurements is {total:N2}.");
         }
     }
 
@@ -44,65 +42,73 @@ namespace FinalAssignment
         public static List<Shape3D> ParseShapesFromFile(string filePath)
         {
             var shapes = new List<Shape3D>();
-
-            foreach (var line in File.ReadLines(filePath))
+            try
             {
-                var parts = line.Split(',');
-
-                if (parts.Length == 0) continue;
-
-                string shapeType = parts[0].Trim().ToLower();
-
-                switch (shapeType)
+                foreach (var line in File.ReadLines(filePath))
                 {
-                    case "cube":
-                        if (parts.Length == 2)
+                    var parts = line.Split(',');
+
+                    if (parts.Length == 0) continue;
+
+                    string shapeType = parts[0].Trim().ToLower();
+                    try
+                    {
+                        switch (shapeType)
                         {
-                            double sideLength = double.Parse(parts[1], CultureInfo.InvariantCulture);
-                            shapes.Add(new Cube(sideLength));
+                            case "cube":
+                                if (parts.Length == 2)
+                                {
+                                    double sideLength = double.Parse(parts[1], CultureInfo.InvariantCulture);
+                                    shapes.Add(new Cube(sideLength));
+                                }
+                                break;
+                            case "cuboid":
+                                if (parts.Length == 4)
+                                {
+                                    double width = double.Parse(parts[1], CultureInfo.InvariantCulture);
+                                    double height = double.Parse(parts[2], CultureInfo.InvariantCulture);
+                                    double depth = double.Parse(parts[3], CultureInfo.InvariantCulture);
+                                    shapes.Add(new Cuboid(width, height, depth));
+                                }
+                                break;
+                            case "sphere":
+                                if (parts.Length == 2)
+                                {
+                                    double radius = double.Parse(parts[1], CultureInfo.InvariantCulture);
+                                    shapes.Add(new Sphere(radius));
+                                }
+                                break;
+                            case "cylinder":
+                                if (parts.Length == 3)
+                                {
+                                    double radius = double.Parse(parts[1], CultureInfo.InvariantCulture);
+                                    double height = double.Parse(parts[2], CultureInfo.InvariantCulture);
+                                    shapes.Add(new Cylinder(radius, height));
+                                }
+                                break;
+                            case "prism":
+                                if (parts.Length == 4)
+                                {
+                                    double sideLength = double.Parse(parts[1], CultureInfo.InvariantCulture);
+                                    int faces = int.Parse(parts[2]);
+                                    double height = double.Parse(parts[3], CultureInfo.InvariantCulture);
+                                    shapes.Add(new Prism(sideLength, faces, height));
+                                }
+                                break;
+                            default:
+                                Console.WriteLine($"Unrecognized shape: {shapeType}");
+                                break;
                         }
-                        break;
-                    case "cuboid":
-                        if (parts.Length == 4)
-                        {
-                            double width = double.Parse(parts[1], CultureInfo.InvariantCulture);
-                            double height = double.Parse(parts[2], CultureInfo.InvariantCulture);
-                            double depth = double.Parse(parts[3], CultureInfo.InvariantCulture);
-                            shapes.Add(new Cuboid(width, height, depth));
-                        }
-                        break;
-                    case "sphere":
-                        if (parts.Length == 2)
-                        {
-                            double radius = double.Parse(parts[1], CultureInfo.InvariantCulture);
-                            shapes.Add(new Sphere(radius));
-                        }
-                        break;
-                    case "cylinder":
-                        if (parts.Length == 3)
-                        {
-                            double radius = double.Parse(parts[1], CultureInfo.InvariantCulture);
-                            double height = double.Parse(parts[2], CultureInfo.InvariantCulture);
-                            shapes.Add(new Cylinder(radius, height));
-                        }
-                        break;
-                    case "prism":
-                        if (parts.Length == 4)
-                        {
-                            double sideLength = double.Parse(parts[1], CultureInfo.InvariantCulture);
-                            int faces = int.Parse(parts[2]);
-                            double height = double.Parse(parts[3], CultureInfo.InvariantCulture);
-                            shapes.Add(new Prism(sideLength, faces, height));
-                        }
-                        break;
-                    case "area":
-                    case "volume":
-                        // Handle calculation commands in the next loop
-                        break;
-                    default:
-                        Console.WriteLine($"Unrecognized shape or command: {shapeType}");
-                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error parsing line '{line}': {ex.Message}");
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading file: {ex.Message}");
             }
 
             return shapes;
@@ -114,7 +120,6 @@ namespace FinalAssignment
 
             foreach (var shape in shapes)
             {
-                // We need to calculate the area or volume based on the shape type
                 if (shape is IShapeWithArea)
                 {
                     total += (decimal)((IShapeWithArea)shape).GetArea();
@@ -128,66 +133,4 @@ namespace FinalAssignment
             return total;
         }
     }
-
-    public abstract class Shape3D
-    {
-        // Common properties and methods for all shapes can go here
-    }
-
-    public interface IShapeWithArea
-    {
-        double GetArea();
-    }
-
-    public interface IShapeWithVolume
-    {
-        double GetVolume();
-    }
-
-    public class Cube : Shape3D, IShapeWithArea, IShapeWithVolume
-    {
-        public double SideLength { get; }
-
-        public Cube(double sideLength)
-        {
-            SideLength = sideLength;
-        }
-
-        public double GetArea()
-        {
-            return 6 * Math.Pow(SideLength, 2); // Surface area of a cube
-        }
-
-        public double GetVolume()
-        {
-            return Math.Pow(SideLength, 3); // Volume of a cube
-        }
-    }
-
-    public class Cuboid : Shape3D, IShapeWithArea, IShapeWithVolume
-    {
-        public double Width { get; }
-        public double Height { get; }
-        public double Depth { get; }
-
-        public Cuboid(double width, double height, double depth)
-        {
-            Width = width;
-            Height = height;
-            Depth = depth;
-        }
-
-        public double GetArea()
-        {
-            return 2 * (Width * Height + Width * Depth + Height * Depth); // Surface area of a cuboid
-        }
-
-        public double GetVolume()
-        {
-            return Width * Height * Depth; // Volume of a cuboid
-        }
-    }
-
-    public class Sphere : Shape3D, IShapeWithArea, IShapeWithVolume
-    {
-        public doubl
+}
