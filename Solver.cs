@@ -7,72 +7,104 @@ namespace FinalAssignment
 {
     public static class Solver
     {
-        // This method processes each line, creating shapes and calculating totals when requested
-        public static decimal Solve(string[] data)
+        // Parse the shapes from the CSV file, expecting the shape data format.
+        public static List<Shape3D> ParseShapesFromFile(string filePath)
         {
             var shapes = new List<Shape3D>();
-            decimal totalMeasurement = 0.0m;  // Use decimal for accurate money calculations and to match your output formatting
-
-            foreach (var line in data)
+            try
             {
-                var parts = line.Split(',');
+                foreach (var line in File.ReadLines(filePath))
+                {
+                    var parts = line.Split(',');
 
-                // If the first part is the shape, create it
-                if (parts[0] == "cube")
-                {
-                    shapes.Add(new Cube(double.Parse(parts[1], CultureInfo.InvariantCulture)));
-                }
-                else if (parts[0] == "cuboid")
-                {
-                    shapes.Add(new Cuboid(
-                        double.Parse(parts[1], CultureInfo.InvariantCulture),
-                        double.Parse(parts[2], CultureInfo.InvariantCulture),
-                        double.Parse(parts[3], CultureInfo.InvariantCulture)
-                    ));
-                }
-                else if (parts[0] == "prism")
-                {
-                    shapes.Add(new Prism(
-                        double.Parse(parts[1], CultureInfo.InvariantCulture),
-                        int.Parse(parts[2]),
-                        double.Parse(parts[3], CultureInfo.InvariantCulture)
-                    ));
-                }
-                else if (parts[0] == "cylinder")
-                {
-                    shapes.Add(new Cylinder(
-                        double.Parse(parts[1], CultureInfo.InvariantCulture),
-                        double.Parse(parts[2], CultureInfo.InvariantCulture)
-                    ));
-                }
-                else if (parts[0] == "sphere")
-                {
-                    shapes.Add(new Sphere(double.Parse(parts[1], CultureInfo.InvariantCulture)));
-                }
-                else if (parts[0] == "area" || parts[0] == "volume")
-                {
-                    decimal scale = decimal.Parse(parts[1], CultureInfo.InvariantCulture);
-                    foreach (var shape in shapes)
+                    // Ignore empty lines
+                    if (parts.Length == 0) continue;
+
+                    string shapeType = parts[0].Trim().ToLower();
+
+                    try
                     {
-                        decimal measurement = 0;
-
-                        // Get area or volume based on the instruction
-                        if (parts[0] == "area" && shape is IShapeWithArea shapeWithArea)
+                        // Shape parsing based on the shape type (cube, cuboid, etc.)
+                        switch (shapeType)
                         {
-                            measurement = (decimal)shapeWithArea.GetArea();
+                            case "cube":
+                                if (parts.Length == 2)
+                                {
+                                    double sideLength = double.Parse(parts[1], CultureInfo.InvariantCulture);
+                                    shapes.Add(new Cube(sideLength));
+                                }
+                                break;
+                            case "cuboid":
+                                if (parts.Length == 4)
+                                {
+                                    double width = double.Parse(parts[1], CultureInfo.InvariantCulture);
+                                    double height = double.Parse(parts[2], CultureInfo.InvariantCulture);
+                                    double depth = double.Parse(parts[3], CultureInfo.InvariantCulture);
+                                    shapes.Add(new Cuboid(width, height, depth));
+                                }
+                                break;
+                            case "sphere":
+                                if (parts.Length == 2)
+                                {
+                                    double radius = double.Parse(parts[1], CultureInfo.InvariantCulture);
+                                    shapes.Add(new Sphere(radius));
+                                }
+                                break;
+                            case "cylinder":
+                                if (parts.Length == 3)
+                                {
+                                    double radius = double.Parse(parts[1], CultureInfo.InvariantCulture);
+                                    double height = double.Parse(parts[2], CultureInfo.InvariantCulture);
+                                    shapes.Add(new Cylinder(radius, height));
+                                }
+                                break;
+                            case "prism":
+                                if (parts.Length == 4)
+                                {
+                                    double sideLength = double.Parse(parts[1], CultureInfo.InvariantCulture);
+                                    int faces = int.Parse(parts[2]);
+                                    double height = double.Parse(parts[3], CultureInfo.InvariantCulture);
+                                    shapes.Add(new Prism(sideLength, faces, height));
+                                }
+                                break;
+                            default:
+                                Console.WriteLine($"Unrecognized shape: {shapeType}");
+                                break;
                         }
-                        else if (parts[0] == "volume" && shape is IShapeWithVolume shapeWithVolume)
-                        {
-                            measurement = (decimal)shapeWithVolume.GetVolume();
-                        }
-
-                        // Apply the scaling factor and add to total
-                        totalMeasurement += measurement * scale;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error parsing line '{line}': {ex.Message}");
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading file: {ex.Message}");
+            }
 
-            return totalMeasurement;
+            return shapes;
+        }
+
+        // Calculate the total measurement (area or volume) based on the shapes parsed
+        public static decimal CalculateTotal(List<Shape3D> shapes)
+        {
+            decimal total = 0;
+
+            // Iterate through the shapes to accumulate area and/or volume
+            foreach (var shape in shapes)
+            {
+                if (shape is IShapeWithArea)
+                {
+                    total += (decimal)((IShapeWithArea)shape).GetArea();
+                }
+                if (shape is IShapeWithVolume)
+                {
+                    total += (decimal)((IShapeWithVolume)shape).GetVolume();
+                }
+            }
+
+            return total;
         }
     }
 }
