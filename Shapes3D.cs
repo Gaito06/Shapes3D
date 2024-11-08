@@ -2,15 +2,27 @@ using System;
 
 namespace Shapes3D
 {
-    // Abstract base class
-    public abstract class Shape
+    public abstract class Shape3D
     {
-        public abstract double SurfaceArea { get; }
-        public abstract double Volume { get; }
+        // Abstract base class for all 3D shapes
     }
 
-    // Cuboid (rectangular prism)
-    public class Cuboid : Shape
+    public interface IShapeWithArea
+    {
+        double GetArea();
+    }
+
+    public interface IShapeWithVolume
+    {
+        double GetVolume();
+    }
+
+    public class Cube : Cuboid
+    {
+        public Cube(double sideLength) : base(sideLength, sideLength, sideLength) { }
+    }
+
+    public class Cuboid : Shape3D, IShapeWithArea, IShapeWithVolume
     {
         public double Width { get; }
         public double Height { get; }
@@ -23,18 +35,24 @@ namespace Shapes3D
             Depth = depth;
         }
 
-        public override double SurfaceArea => 2 * (Width * Height + Height * Depth + Depth * Width);
-        public override double Volume => Width * Height * Depth;
+        public double GetArea() => 2 * (Width * Height + Height * Depth + Depth * Width);
+        public double GetVolume() => Width * Height * Depth;
     }
 
-    // Cube (child of Cuboid)
-    public class Cube : Cuboid
+    public class Sphere : Shape3D, IShapeWithArea, IShapeWithVolume
     {
-        public Cube(double sideLength) : base(sideLength, sideLength, sideLength) { }
+        public double Radius { get; }
+
+        public Sphere(double radius)
+        {
+            Radius = radius;
+        }
+
+        public double GetArea() => 4 * Math.PI * Math.Pow(Radius, 2);
+        public double GetVolume() => (4.0 / 3.0) * Math.PI * Math.Pow(Radius, 3);
     }
 
-    // Cylinder
-    public class Cylinder : Shape
+    public class Cylinder : Shape3D, IShapeWithArea, IShapeWithVolume
     {
         public double Radius { get; }
         public double Height { get; }
@@ -45,26 +63,11 @@ namespace Shapes3D
             Height = height;
         }
 
-        public override double SurfaceArea => 2 * Math.PI * Radius * (Radius + Height);
-        public override double Volume => Math.PI * Math.Pow(Radius, 2) * Height;
+        public double GetArea() => 2 * Math.PI * Radius * (Radius + Height);
+        public double GetVolume() => Math.PI * Math.Pow(Radius, 2) * Height;
     }
 
-    // Sphere
-    public class Sphere : Shape
-    {
-        public double Radius { get; }
-
-        public Sphere(double radius)
-        {
-            Radius = radius;
-        }
-
-        public override double SurfaceArea => 4 * Math.PI * Math.Pow(Radius, 2);
-        public override double Volume => (4.0 / 3.0) * Math.PI * Math.Pow(Radius, 3);
-    }
-
-    // Prism (n-gonal prism)
-    public class Prism : Shape
+    public class Prism : Shape3D, IShapeWithArea, IShapeWithVolume
     {
         public double SideLength { get; }
         public int Faces { get; }
@@ -77,7 +80,7 @@ namespace Shapes3D
             Height = height;
         }
 
-        public override double SurfaceArea => Faces * SideLength * Height;
-        public override double Volume => 0.5 * Faces * Math.Pow(SideLength, 2) * Height;
+        public double GetArea() => Faces * SideLength * Height;
+        public double GetVolume() => 0.5 * Faces * Math.Pow(SideLength, 2) * Height;
     }
 }
